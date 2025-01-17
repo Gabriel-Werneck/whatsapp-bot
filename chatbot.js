@@ -41,29 +41,34 @@ client.on('message', async msg => {
         await chat.sendStateTyping();
         await delay(2000);
         const contact = await msg.getContact();
-        const name = contact.pushname || "cliente"; 
+        const name = contact.pushname || "cliente";
 
-        await client.sendMessage(msg.from, `Olá, ${name.split(" ")[0]}! Sou a Letícia, do Aqui é Vendas. Representamos a Conamore, especialista em artigos de cama, mesa e banho de alta qualidade. Para melhor atendê-lo(a), por gentileza, peço que me informe os seguintes dados para emissão do cadastro e orçamento:
+        await client.sendMessage(
+            msg.from,
+            `Olá, ${name.split(" ")[0]}! Sou a Letícia, do Aqui é Vendas. Representamos a Conamore, especialista em artigos de cama, mesa e banho de alta qualidade.
 
-📋 Nome completo ou razão social:
-🆔 CPF ou CNPJ:
-📧 E-mail:
-🏠 Endereço de entrega (Rua, Nº, Bairro, Cidade e CEP):
-📞 Telefone de contato:
+Para melhor atendê-lo(a), por gentileza, copie, preencha e envie as informações abaixo:
 
-Assim que recebermos suas informações, poderemos continuar o atendimento. Obrigada! 😊`);
+📋 Nome completo ou razão social:  
+🆔 CPF ou CNPJ:  
+📧 E-mail:  
+🏠 Endereço de entrega (Rua, Nº, Bairro, Cidade e CEP):  
+📞 Telefone de contato:  
+
+Assim que recebermos suas informações, poderemos continuar o atendimento. Obrigada! 😊`
+        );
         return;
     }
 
     // Verificar se o cliente já forneceu as informações solicitadas
-    const infoProvided = msg.body.match(/(nome|Nome|)/i);
+    const infoProvided = msg.body.match(/(nome completo|razão social|razao social|cpf|cnpj|e-mail|endereço|telefone)/i);
 
     if (infoProvided) {
         await client.sendMessage(msg.from, `Obrigada pelas informações! Agora, selecione uma das opções abaixo para continuar:
 
-1️⃣ - Conhecer nosso institucional
-2️⃣ - Solicitar tabela de preços
-3️⃣ - Formas de pagamento
+1️⃣ - Conhecer nosso institucional  
+2️⃣ - Solicitar tabela de preços  
+3️⃣ - Formas de pagamento  
 4️⃣ - Outras perguntas`);
         return;
     }
@@ -75,18 +80,22 @@ Assim que recebermos suas informações, poderemos continuar o atendimento. Obri
             await delay(2000);
             await client.sendMessage(chat.id._serialized, `Posso ajudar com mais alguma coisa? Responda com:
 
-✔️ Sim, para retornar ao menu principal.
+✔️ Sim, para retornar ao menu principal.  
 ❌ Não, para encerrar o atendimento.`);
         }
     };
+
+    // Respostas afirmativas e negativas
+    const affirmatives = /(sim|Sim|claro|Claro|ok|Ok|certo|Certo)/i;
+    const negatives = /(não|Nao|não|Não|nao)/i;
 
     if (affirmatives.test(msg.body) && userHasSelectedOption) {
         userHasSelectedOption = false; // Reseta para permitir uma nova seleção
         await client.sendMessage(msg.from, `Por favor, escolha uma das opções abaixo:
 
-1️⃣ - Conhecer nosso catálogo
-2️⃣ - Solicitar tabela de preços
-3️⃣ - Formas de pagamento
+1️⃣ - Conhecer nosso catálogo  
+2️⃣ - Solicitar tabela de preços  
+3️⃣ - Formas de pagamento  
 4️⃣ - Outras perguntas`);
         return;
     }
@@ -136,14 +145,14 @@ Assim que recebermos suas informações, poderemos continuar o atendimento. Obri
         await delay(2000);
         await client.sendMessage(msg.from, `💳 As formas de pagamento são:
 
-            ✔️ À vista (PIX/BOLETO/TED) - *DESCONTO DE 5%* a ser aplicado no orçamento caso seja a forma escolhida;
-            ✔️ Parcelado no cartão de crédito *sem juros*;
-            ✔️ Parcelado no cartão BNDES em até *32x*;
-            ✔️ Faturado no CNPJ mediante análise de crédito, com *50% à vista* e *50% para 30/60 dias*.
-            
-            Por favor, informe sua preferência!`);
-            await returnToMenu(chat);
-            
+✔️ À vista (PIX/BOLETO/TED) - *DESCONTO DE 5%* a ser aplicado no orçamento caso seja a forma escolhida;  
+✔️ Parcelado no cartão de crédito *sem juros*;  
+✔️ Parcelado no cartão BNDES em até *32x*;  
+✔️ Faturado no CNPJ mediante análise de crédito, com *50% à vista* e *50% para 30/60 dias*.  
+
+Por favor, informe sua preferência!`);
+        await returnToMenu(chat);
+        return;
     }
 
     // Outras perguntas
