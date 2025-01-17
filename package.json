@@ -1,4 +1,10 @@
-{
+  {
+    "name": "whatsapp-bot",
+    "version": "1.0.0",
+    "main": "bot.js",
+    "scripts": {
+      "start": "node chatbot.js"
+    },  
   "dependencies": {
     "moment-timezone": "^0.5.45",
     "qrcode-terminal": "^0.12.0",
