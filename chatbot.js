@@ -1,17 +1,33 @@
-// leitor de qr code
-const qrcode = require('qrcode-terminal');
-const { Client, Buttons, List, MessageMedia } = require('whatsapp-web.js'); // Mudança Buttons
-const client = new Client();
-// serviço de leitura do qr code
-client.on('qr', qr => {
-    qrcode.generate(qr, {small: true});
+const express = require('express'); // Adicione o Express
+const app = express();
+
+const PORT = process.env.PORT || 3000; // Porta definida pelo Render ou padrão 3000
+
+// Rota simples apenas para manter o serviço ativo
+app.get('/', (req, res) => {
+    res.send('WhatsApp Bot está rodando!');
 });
-// apos isso ele diz que foi tudo certo
+
+// Inicia o servidor na porta configurada
+app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+});
+
+// Restante do código do bot
+const qrcode = require('qrcode-terminal');
+const { Client, Buttons, List, MessageMedia } = require('whatsapp-web.js');
+const client = new Client();
+
+client.on('qr', (qr) => {
+    qrcode.generate(qr, { small: true });
+});
+
 client.on('ready', () => {
     console.log('Tudo certo! WhatsApp conectado.');
 });
-// E inicializa tudo 
+
 client.initialize();
+
 
 const delay = ms => new Promise(res => setTimeout(res, ms)); // Função que usamos para criar o delay entre uma ação e outra
 
