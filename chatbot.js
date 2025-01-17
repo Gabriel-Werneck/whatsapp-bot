@@ -28,119 +28,85 @@ client.on('ready', () => {
 
 client.initialize();
 
+const delay = ms => new Promise(res => setTimeout(res, ms)); // Função para criar delay entre ações
 
-const delay = ms => new Promise(res => setTimeout(res, ms)); // Função que usamos para criar o delay entre uma ação e outra
-
-// Funil
-
+// Funil principal do atendimento
 client.on('message', async msg => {
-
-    if (msg.body.match(/(menu|Menu|dia|tarde|noite|oi|Oi|Olá|olá|ola|Ola)/i) && msg.from.endsWith('@c.us')) {
-
+    if (msg.body.match(/(menu|Menu|dia|tarde|noite|oi|Oi|Olá|olá|ola|Ola|bem|boa|Boa)/i) && msg.from.endsWith('@c.us')) {
         const chat = await msg.getChat();
 
-        await delay(3000); //delay de 3 segundos
-        await chat.sendStateTyping(); // Simulando Digitação
-        await delay(3000); //Delay de 3000 milisegundos mais conhecido como 3 segundos
-        const contact = await msg.getContact(); //Pegando o contato
-        const name = contact.pushname; //Pegando o nome do contato
-        await client.sendMessage(msg.from,'Olá! '+ name.split(" ")[0] + 'Sou a Letícia, do Aqui é Vendas. Como posso ajudá-lo hoje? Por favor, digite uma das opções abaixo:\n\n1 - Como funciona\n2 - Valores dos planos\n3 - Benefícios\n4 - Como aderir\n5 - Outras perguntas'); //Primeira mensagem de texto
-        await delay(3000); //delay de 3 segundos
-        await chat.sendStateTyping(); // Simulando Digitação
-        await delay(5000); //Delay de 5 segundos
-    
-        
+        await delay(2000);
+        await chat.sendStateTyping();
+        await delay(2000);
+        const contact = await msg.getContact();
+        const name = contact.pushname || "cliente"; 
+
+        await client.sendMessage(msg.from, `Olá, ${name.split(" ")[0]}! Sou a Letícia, do Aqui é Vendas. Representamos a Conamore, especialista em artigos de cama, mesa e banho de alta qualidade. Para melhor atendê-lo(a), por gentileza, peço que me informe os seguintes dados para emissão do cadastro e orçamento:
+
+📋 Nome completo ou razão social:
+🆔 CPF ou CNPJ:
+📧 E-mail:
+🏠 Endereço de entrega (Rua, Nº, Bairro, Cidade e CEP):
+📞 Telefone de contato:
+
+Assim que recebermos suas informações, poderemos continuar o atendimento. Obrigada! 😊`);
+        return;
     }
 
+    // Verificar se o cliente já forneceu as informações solicitadas
+    const infoProvided = msg.body.match(/(nome completo|cpf|cnpj|e-mail|endereço|telefone)/i);
 
+    if (infoProvided) {
+        await client.sendMessage(msg.from, `Obrigada pelas informações! Agora, selecione uma das opções abaixo para continuar:
 
+1️⃣ - Conhecer nosso catálogo
+2️⃣ - Solicitar tabela de preços
+3️⃣ - Formas de pagamento
+4️⃣ - Outras perguntas`);
+        return;
+    }
 
-    if (msg.body !== null && msg.body === '1' && msg.from.endsWith('@c.us')) {
+    // Enviar catálogo
+    if (msg.body === '1' && msg.from.endsWith('@c.us')) {
+        const chat = await msg.getChat();
+        const catalog = MessageMedia.fromFilePath('./Conamore_2025.pdf'); // Certifique-se de ter o arquivo "catalogo.pdf" no diretório
+
+        await delay(2000);
+        await chat.sendStateTyping();
+        await delay(2000);
+        await client.sendMessage(msg.from, '📚 Aqui está nosso catálogo completo. Esperamos que goste dos nossos produtos!');
+        await client.sendMessage(msg.from, catalog);
+    }
+
+    // Enviar tabela de preços
+    if (msg.body === '2' && msg.from.endsWith('@c.us')) {
+        const chat = await msg.getChat();
+        const priceTable = MessageMedia.fromFilePath('./Catalogo_Hotelaria_2025.pdf'); // Certifique-se de ter o arquivo "tabela_precos.pdf" no diretório
+
+        await delay(2000);
+        await chat.sendStateTyping();
+        await delay(2000);
+        await client.sendMessage(msg.from, '📄 Segue a nossa tabela de preços atualizada. Qualquer dúvida, estou à disposição!');
+        await client.sendMessage(msg.from, priceTable);
+    }
+
+    // Formas de pagamento
+    if (msg.body === '3' && msg.from.endsWith('@c.us')) {
         const chat = await msg.getChat();
 
-
-        await delay(3000); //delay de 3 segundos
-        await chat.sendStateTyping(); // Simulando Digitação
-        await delay(3000);
-        await client.sendMessage(msg.from, 'Nosso serviço oferece consultas médicas 24 horas por dia, 7 dias por semana, diretamente pelo WhatsApp.\n\nNão há carência, o que significa que você pode começar a usar nossos serviços imediatamente após a adesão.\n\nOferecemos atendimento médico ilimitado, receitas\n\nAlém disso, temos uma ampla gama de benefícios, incluindo acesso a cursos gratuitos');
-
-        await delay(3000); //delay de 3 segundos
-        await chat.sendStateTyping(); // Simulando Digitação
-        await delay(3000);
-        await client.sendMessage(msg.from, 'COMO FUNCIONA?\nÉ muito simples.\n\n1º Passo\nFaça seu cadastro e escolha o plano que desejar.\n\n2º Passo\nApós efetuar o pagamento do plano escolhido você já terá acesso a nossa área exclusiva para começar seu atendimento na mesma hora.\n\n3º Passo\nSempre que precisar');
-
-        await delay(3000); //delay de 3 segundos
-        await chat.sendStateTyping(); // Simulando Digitação
-        await delay(3000);
-        await client.sendMessage(msg.from, 'Link para cadastro: https://site.com');
-
-
+        await delay(2000);
+        await chat.sendStateTyping();
+        await delay(2000);
+        await client.sendMessage(msg.from, '💳 As formas de pagamento são: ✔️ À vista (PIX/BOLETO/TED) - *DESCONTO DE 5%* a ser aplicado no orçamento caso seja a forma escolhida; ✔️ Parcelado no cartão de crédito *sem juros*; ✔️ Parcelado no cartão BNDES em até *32x*; ✔️ Faturado no CNPJ mediante análise de crédito, com *50% à vista* e *50% para 30/60 dias*. Por favor, informe sua preferência!');
     }
 
-    if (msg.body !== null && msg.body === '2' && msg.from.endsWith('@c.us')) {
+    // Outras perguntas
+    if (msg.body === '4' && msg.from.endsWith('@c.us')) {
         const chat = await msg.getChat();
 
-
-        await delay(3000); //Delay de 3000 milisegundos mais conhecido como 3 segundos
-        await chat.sendStateTyping(); // Simulando Digitação
-        await delay(3000);
-        await client.sendMessage(msg.from, '*Plano Individual:* R$22,50 por mês.\n\n*Plano Família:* R$39,90 por mês, inclui você mais 3 dependentes.\n\n*Plano TOP Individual:* R$42,50 por mês, com benefícios adicionais como\n\n*Plano TOP Família:* R$79,90 por mês, inclui você mais 3 dependentes');
-
-        await delay(3000); //delay de 3 segundos
-        await chat.sendStateTyping(); // Simulando Digitação
-        await delay(3000);
-        await client.sendMessage(msg.from, 'Link para cadastro: https://site.com');
+        await delay(2000);
+        await chat.sendStateTyping();
+        await delay(2000);
+        await client.sendMessage(msg.from, 'Se você tiver outras dúvidas ou quiser mais informações, é só perguntar por aqui! 😊');
     }
-
-    if (msg.body !== null && msg.body === '3' && msg.from.endsWith('@c.us')) {
-        const chat = await msg.getChat();
-
-
-        await delay(3000); //Delay de 3000 milisegundos mais conhecido como 3 segundos
-        await chat.sendStateTyping(); // Simulando Digitação
-        await delay(3000);
-        await client.sendMessage(msg.from, 'Sorteio de em prêmios todo ano.\n\nAtendimento médico ilimitado 24h por dia.\n\nReceitas de medicamentos');
-        
-        await delay(3000); //delay de 3 segundos
-        await chat.sendStateTyping(); // Simulando Digitação
-        await delay(3000);
-        await client.sendMessage(msg.from, 'Link para cadastro: https://site.com');
-
-    }
-
-    if (msg.body !== null && msg.body === '4' && msg.from.endsWith('@c.us')) {
-        const chat = await msg.getChat();
-
-        await delay(3000); //Delay de 3000 milisegundos mais conhecido como 3 segundos
-        await chat.sendStateTyping(); // Simulando Digitação
-        await delay(3000);
-        await client.sendMessage(msg.from, 'Você pode aderir aos nossos planos diretamente pelo nosso site ou pelo WhatsApp.\n\nApós a adesão, você terá acesso imediato');
-
-
-        await delay(3000); //delay de 3 segundos
-        await chat.sendStateTyping(); // Simulando Digitação
-        await delay(3000);
-        await client.sendMessage(msg.from, 'Link para cadastro: https://site.com');
-
-
-    }
-
-    if (msg.body !== null && msg.body === '5' && msg.from.endsWith('@c.us')) {
-        const chat = await msg.getChat();
-
-        await delay(3000); //Delay de 3000 milisegundos mais conhecido como 3 segundos
-        await chat.sendStateTyping(); // Simulando Digitação
-        await delay(3000);
-        await client.sendMessage(msg.from, 'Se você tiver outras dúvidas ou precisar de mais informações, por favor, fale aqui nesse whatsapp ou visite nosso site: https://site.com ');
-
-
-    }
-
-
-
-
-
-
-
-
 });
