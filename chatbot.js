@@ -32,7 +32,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms)); // Função para cr
 
 // Funil principal do atendimento
 client.on('message', async msg => {
-    if (msg.body.match(/(menu|Menu|dia|tarde|noite|oi|Oi|Olá|olá|ola|Ola|bem|boa|Boa)/i) && msg.from.endsWith('@c.us')) {
+    if (msg.body.match(/(menu|Menu|dia|tarde|noite|oi|Oi|Olá|olá|ola|Ola|bem|boa|Boa|teste)/i) && msg.from.endsWith('@c.us')) {
         const chat = await msg.getChat();
 
         await delay(2000);
