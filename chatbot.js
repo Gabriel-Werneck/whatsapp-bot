@@ -56,7 +56,7 @@ Assim que recebermos suas informações, poderemos continuar o atendimento. Obri
     }
 
     // Verificar se o cliente já forneceu as informações solicitadas
-    const infoProvided = msg.body.match(/(nome completo|cpf|cnpj|e-mail|endereço|telefone)/i);
+    const infoProvided = msg.body.match(/(nome)/i);
 
     if (infoProvided) {
         await client.sendMessage(msg.from, `Obrigada pelas informações! Agora, selecione uma das opções abaixo para continuar:
