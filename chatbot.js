@@ -80,27 +80,27 @@ Assim que recebermos suas informações, poderemos continuar o atendimento. Obri
         }
     };
 
-    client.on('message', async (msg) => {
-        const affirmatives = /^(sim|s|si|Sim|S)$/i;
-        const negatives = /^(não|nao|na|Não|Nao|N|n)$/i;
-
-        if (affirmatives.test(msg.body) && msg.from.endsWith('@c.us')) {
-            await client.sendMessage(msg.from, `Por favor, escolha uma das opções abaixo:
+    if (affirmatives.test(msg.body) && userHasSelectedOption) {
+        userHasSelectedOption = false; // Reseta para permitir uma nova seleção
+        await client.sendMessage(msg.from, `Por favor, escolha uma das opções abaixo:
 
 1️⃣ - Conhecer nosso catálogo
 2️⃣ - Solicitar tabela de preços
 3️⃣ - Formas de pagamento
 4️⃣ - Outras perguntas`);
-        } else if (negatives.test(msg.body) && msg.from.endsWith('@c.us')) {
-            await client.sendMessage(msg.from, 'Obrigada pelo contato! Foi um prazer atender você. Qualquer outra necessidade, estamos à disposição. Tenha um ótimo dia! 😊');
-        }
-    });
+        return;
+    }
+
+    if (negatives.test(msg.body) && userHasSelectedOption) {
+        await client.sendMessage(msg.from, 'Obrigada pelo contato! Foi um prazer atender você. Qualquer outra necessidade, estamos à disposição. Tenha um ótimo dia! 😊');
+        return;
+    }
 
     // Enviar catálogo
     if (msg.body === '1' && msg.from.endsWith('@c.us')) {
         userHasSelectedOption = true;
         const chat = await msg.getChat();
-        const catalog = MessageMedia.fromFilePath('./Conamore_2025.pdf'); // Certifique-se de ter o arquivo "catalogo.pdf" no diretório
+        const catalog = MessageMedia.fromFilePath('./Conamore_2025.pdf');
 
         await delay(2000);
         await chat.sendStateTyping();
@@ -108,13 +108,14 @@ Assim que recebermos suas informações, poderemos continuar o atendimento. Obri
         await client.sendMessage(msg.from, '📚 Aqui está nosso catálogo completo. Esperamos que goste dos nossos produtos!');
         await client.sendMessage(msg.from, catalog);
         await returnToMenu(chat);
+        return;
     }
 
     // Enviar tabela de preços
     if (msg.body === '2' && msg.from.endsWith('@c.us')) {
         userHasSelectedOption = true;
         const chat = await msg.getChat();
-        const priceTable = MessageMedia.fromFilePath('./Catalogo_Hotelaria_2025.pdf'); // Certifique-se de ter o arquivo "tabela_precos.pdf" no diretório
+        const priceTable = MessageMedia.fromFilePath('./Catalogo_Hotelaria_2025.pdf');
 
         await delay(2000);
         await chat.sendStateTyping();
@@ -122,6 +123,7 @@ Assim que recebermos suas informações, poderemos continuar o atendimento. Obri
         await client.sendMessage(msg.from, '📄 Segue a nossa tabela de preços atualizada. Qualquer dúvida, estou à disposição!');
         await client.sendMessage(msg.from, priceTable);
         await returnToMenu(chat);
+        return;
     }
 
     // Formas de pagamento
@@ -141,8 +143,8 @@ Assim que recebermos suas informações, poderemos continuar o atendimento. Obri
             
             Por favor, informe sua preferência!`);
             await returnToMenu(chat);
-        }
-
+            
+    }
 
     // Outras perguntas
     if (msg.body === '4' && msg.from.endsWith('@c.us')) {
@@ -154,5 +156,6 @@ Assim que recebermos suas informações, poderemos continuar o atendimento. Obri
         await delay(2000);
         await client.sendMessage(msg.from, 'Se você tiver outras dúvidas ou quiser mais informações, é só perguntar por aqui! 😊');
         await returnToMenu(chat);
+        return;
     }
 });
