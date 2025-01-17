@@ -1,11 +1,12 @@
-  {
-    "name": "whatsapp-bot",
-    "version": "1.0.0",
-    "main": "bot.js",
-    "scripts": {
-      "start": "node chatbot.js"
-    },  
+{
+  "name": "whatsapp-bot",
+  "version": "1.0.0",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node chatbot.js"
+  },
   "dependencies": {
+    "express": "^4.21.2",
     "moment-timezone": "^0.5.45",
     "qrcode-terminal": "^0.12.0",
     "whatsapp-web.js": ""
