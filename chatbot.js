@@ -30,6 +30,8 @@ client.initialize();
 
 const delay = ms => new Promise(res => setTimeout(res, ms)); // Função para criar delay entre ações
 
+let userHasSelectedOption = false; // Variável para rastrear se o usuário já escolheu uma opção
+
 // Funil principal do atendimento
 client.on('message', async msg => {
     if (msg.body.match(/(menu|Menu|dia|tarde|noite|oi|Oi|Olá|olá|ola|Ola|bem|boa|Boa|teste)/i) && msg.from.endsWith('@c.us')) {
@@ -59,15 +61,44 @@ Assim que recebermos suas informações, poderemos continuar o atendimento. Obri
     if (infoProvided) {
         await client.sendMessage(msg.from, `Obrigada pelas informações! Agora, selecione uma das opções abaixo para continuar:
 
-1️⃣ - Conhecer nosso catálogo
+1️⃣ - Conhecer nosso institucional
 2️⃣ - Solicitar tabela de preços
 3️⃣ - Formas de pagamento
 4️⃣ - Outras perguntas`);
         return;
     }
 
+    const returnToMenu = async (chat) => {
+        if (userHasSelectedOption) {
+            await delay(2000);
+            await chat.sendStateTyping();
+            await delay(2000);
+            await client.sendMessage(chat.id._serialized, `Posso ajudar com mais alguma coisa? Responda com:
+
+✔️ Sim, para retornar ao menu principal.
+❌ Não, para encerrar o atendimento.`);
+        }
+    };
+
+    client.on('message', async (msg) => {
+        const affirmatives = /^(sim|s|si|Sim|S)$/i;
+        const negatives = /^(não|nao|na|Não|Nao|N|n)$/i;
+
+        if (affirmatives.test(msg.body) && msg.from.endsWith('@c.us')) {
+            await client.sendMessage(msg.from, `Por favor, escolha uma das opções abaixo:
+
+1️⃣ - Conhecer nosso catálogo
+2️⃣ - Solicitar tabela de preços
+3️⃣ - Formas de pagamento
+4️⃣ - Outras perguntas`);
+        } else if (negatives.test(msg.body) && msg.from.endsWith('@c.us')) {
+            await client.sendMessage(msg.from, 'Obrigada pelo contato! Foi um prazer atender você. Qualquer outra necessidade, estamos à disposição. Tenha um ótimo dia! 😊');
+        }
+    });
+
     // Enviar catálogo
     if (msg.body === '1' && msg.from.endsWith('@c.us')) {
+        userHasSelectedOption = true;
         const chat = await msg.getChat();
         const catalog = MessageMedia.fromFilePath('./Conamore_2025.pdf'); // Certifique-se de ter o arquivo "catalogo.pdf" no diretório
 
@@ -76,10 +107,12 @@ Assim que recebermos suas informações, poderemos continuar o atendimento. Obri
         await delay(2000);
         await client.sendMessage(msg.from, '📚 Aqui está nosso catálogo completo. Esperamos que goste dos nossos produtos!');
         await client.sendMessage(msg.from, catalog);
+        await returnToMenu(chat);
     }
 
     // Enviar tabela de preços
     if (msg.body === '2' && msg.from.endsWith('@c.us')) {
+        userHasSelectedOption = true;
         const chat = await msg.getChat();
         const priceTable = MessageMedia.fromFilePath('./Catalogo_Hotelaria_2025.pdf'); // Certifique-se de ter o arquivo "tabela_precos.pdf" no diretório
 
@@ -88,25 +121,38 @@ Assim que recebermos suas informações, poderemos continuar o atendimento. Obri
         await delay(2000);
         await client.sendMessage(msg.from, '📄 Segue a nossa tabela de preços atualizada. Qualquer dúvida, estou à disposição!');
         await client.sendMessage(msg.from, priceTable);
+        await returnToMenu(chat);
     }
 
     // Formas de pagamento
     if (msg.body === '3' && msg.from.endsWith('@c.us')) {
+        userHasSelectedOption = true;
         const chat = await msg.getChat();
 
         await delay(2000);
         await chat.sendStateTyping();
         await delay(2000);
-        await client.sendMessage(msg.from, '💳 As formas de pagamento são: ✔️ À vista (PIX/BOLETO/TED) - *DESCONTO DE 5%* a ser aplicado no orçamento caso seja a forma escolhida; ✔️ Parcelado no cartão de crédito *sem juros*; ✔️ Parcelado no cartão BNDES em até *32x*; ✔️ Faturado no CNPJ mediante análise de crédito, com *50% à vista* e *50% para 30/60 dias*. Por favor, informe sua preferência!');
-    }
+        await client.sendMessage(msg.from, `💳 As formas de pagamento são:
+
+            ✔️ À vista (PIX/BOLETO/TED) - *DESCONTO DE 5%* a ser aplicado no orçamento caso seja a forma escolhida;
+            ✔️ Parcelado no cartão de crédito *sem juros*;
+            ✔️ Parcelado no cartão BNDES em até *32x*;
+            ✔️ Faturado no CNPJ mediante análise de crédito, com *50% à vista* e *50% para 30/60 dias*.
+            
+            Por favor, informe sua preferência!`);
+            await returnToMenu(chat);
+        }
+
 
     // Outras perguntas
     if (msg.body === '4' && msg.from.endsWith('@c.us')) {
+        userHasSelectedOption = true;
         const chat = await msg.getChat();
 
         await delay(2000);
         await chat.sendStateTyping();
         await delay(2000);
         await client.sendMessage(msg.from, 'Se você tiver outras dúvidas ou quiser mais informações, é só perguntar por aqui! 😊');
+        await returnToMenu(chat);
     }
 });
