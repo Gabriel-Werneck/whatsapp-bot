@@ -34,7 +34,7 @@ let userHasSelectedOption = false; // Variável para rastrear se o usuário já 
 
 // Funil principal do atendimento
 client.on('message', async msg => {
-    if (msg.body.match(/(menu|Menu|dia|tarde|noite|oi|Oi|Olá|olá|ola|Ola|bem|boa|Boa|teste)/i) && msg.from.endsWith('@c.us')) {
+    if (msg.from.endsWith('@c.us')) { // Responde a qualquer mensagem de usuários
         const chat = await msg.getChat();
 
         await delay(2000);
