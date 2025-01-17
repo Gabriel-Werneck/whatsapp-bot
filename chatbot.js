@@ -30,18 +30,29 @@ client.initialize();
 
 const delay = ms => new Promise(res => setTimeout(res, ms)); // Função para criar delay entre ações
 
-let userHasSelectedOption = false; // Variável para rastrear se o usuário já escolheu uma opção
+// Objeto para armazenar o estado de cada usuário
+const userStates = {};
 
 // Funil principal do atendimento
 client.on('message', async msg => {
-    if (msg.from.endsWith('@c.us')) { // Responde a qualquer mensagem de usuários
-        const chat = await msg.getChat();
+    if (!msg.from.endsWith('@c.us')) return; // Ignora mensagens que não são de usuários
 
+    const chat = await msg.getChat();
+    const contact = await msg.getContact();
+    const name = contact.pushname || "cliente";
+
+    // Inicializa o estado do usuário, se necessário
+    if (!userStates[msg.from]) {
+        userStates[msg.from] = { hasProvidedInfo: false };
+    }
+
+    const userState = userStates[msg.from];
+
+    // Caso o usuário não tenha fornecido informações, solicita novamente
+    if (!userState.hasProvidedInfo) {
         await delay(2000);
         await chat.sendStateTyping();
         await delay(2000);
-        const contact = await msg.getContact();
-        const name = contact.pushname || "cliente";
 
         await client.sendMessage(
             msg.from,
@@ -57,40 +68,51 @@ Para melhor atendê-lo(a), por gentileza, copie, preencha e envie as informaçõ
 
 Assim que recebermos suas informações, poderemos continuar o atendimento. Obrigada! 😊`
         );
+        userState.awaitingInfo = true; // Define que o bot está aguardando as informações
         return;
     }
 
-    // Verificar se o cliente já forneceu as informações solicitadas
-    const infoProvided = msg.body.match(/(nome completo|razão social|razao social|cpf|cnpj|e-mail|endereço|telefone)/i);
+    // Verifica se as informações foram fornecidas
+    if (userState.awaitingInfo) {
+        const infoProvided = msg.body.match(/nome completo|razão social|cpf|cnpj|e-mail|endereço|telefone/i);
+        if (infoProvided) {
+            userState.hasProvidedInfo = true; // Marca que o usuário forneceu as informações
+            userState.awaitingInfo = false;
 
-    if (infoProvided) {
-        await client.sendMessage(msg.from, `Obrigada pelas informações! Agora, selecione uma das opções abaixo para continuar:
+            await client.sendMessage(
+                msg.from,
+                `Obrigada pelas informações! Agora, selecione uma das opções abaixo para continuar:
 
 1️⃣ - Conhecer nosso institucional  
 2️⃣ - Solicitar tabela de preços  
 3️⃣ - Formas de pagamento  
-4️⃣ - Outras perguntas`);
-        return;
+4️⃣ - Outras perguntas`
+            );
+            return;
+        } else {
+            await client.sendMessage(
+                msg.from,
+                `As informações parecem incompletas. Por favor, copie, preencha e envie novamente as informações solicitadas.`
+            );
+            return;
+        }
     }
 
+    // Lógica para lidar com opções do menu
     const returnToMenu = async (chat) => {
-        if (userHasSelectedOption) {
-            await delay(2000);
-            await chat.sendStateTyping();
-            await delay(2000);
-            await client.sendMessage(chat.id._serialized, `Posso ajudar com mais alguma coisa? Responda com:
+        await delay(2000);
+        await chat.sendStateTyping();
+        await delay(2000);
+        await client.sendMessage(chat.id._serialized, `Posso ajudar com mais alguma coisa? Responda com:
 
 ✔️ Sim, para retornar ao menu principal.  
 ❌ Não, para encerrar o atendimento.`);
-        }
     };
 
-    // Respostas afirmativas e negativas
-    const affirmatives = /(sim|Sim|claro|Claro|ok|Ok|certo|Certo)/i;
-    const negatives = /(não|Nao|não|Não|nao)/i;
+    const affirmatives = /(sim|claro|ok|certo)/i;
+    const negatives = /(não|nao)/i;
 
-    if (affirmatives.test(msg.body) && userHasSelectedOption) {
-        userHasSelectedOption = false; // Reseta para permitir uma nova seleção
+    if (affirmatives.test(msg.body)) {
         await client.sendMessage(msg.from, `Por favor, escolha uma das opções abaixo:
 
 1️⃣ - Conhecer nosso catálogo  
@@ -100,50 +122,25 @@ Assim que recebermos suas informações, poderemos continuar o atendimento. Obri
         return;
     }
 
-    if (negatives.test(msg.body) && userHasSelectedOption) {
+    if (negatives.test(msg.body)) {
         await client.sendMessage(msg.from, 'Obrigada pelo contato! Foi um prazer atender você. Qualquer outra necessidade, estamos à disposição. Tenha um ótimo dia! 😊');
         return;
     }
 
-    // Enviar catálogo
-    if (msg.body === '1' && msg.from.endsWith('@c.us')) {
-        userHasSelectedOption = true;
-        const chat = await msg.getChat();
-        const catalog = MessageMedia.fromFilePath('./Conamore_2025.pdf');
-
-        await delay(2000);
-        await chat.sendStateTyping();
-        await delay(2000);
-        await client.sendMessage(msg.from, '📚 Aqui está nosso catálogo completo. Esperamos que goste dos nossos produtos!');
-        await client.sendMessage(msg.from, catalog);
-        await returnToMenu(chat);
-        return;
-    }
-
-    // Enviar tabela de preços
-    if (msg.body === '2' && msg.from.endsWith('@c.us')) {
-        userHasSelectedOption = true;
-        const chat = await msg.getChat();
-        const priceTable = MessageMedia.fromFilePath('./Catalogo_Hotelaria_2025.pdf');
-
-        await delay(2000);
-        await chat.sendStateTyping();
-        await delay(2000);
-        await client.sendMessage(msg.from, '📄 Segue a nossa tabela de preços atualizada. Qualquer dúvida, estou à disposição!');
-        await client.sendMessage(msg.from, priceTable);
-        await returnToMenu(chat);
-        return;
-    }
-
-    // Formas de pagamento
-    if (msg.body === '3' && msg.from.endsWith('@c.us')) {
-        userHasSelectedOption = true;
-        const chat = await msg.getChat();
-
-        await delay(2000);
-        await chat.sendStateTyping();
-        await delay(2000);
-        await client.sendMessage(msg.from, `💳 As formas de pagamento são:
+    // Outras opções
+    switch (msg.body) {
+        case '1':
+            const catalog = MessageMedia.fromFilePath('./Conamore_2025.pdf');
+            await client.sendMessage(msg.from, '📚 Aqui está nosso catálogo completo. Esperamos que goste dos nossos produtos!');
+            await client.sendMessage(msg.from, catalog);
+            break;
+        case '2':
+            const priceTable = MessageMedia.fromFilePath('./Catalogo_Hotelaria_2025.pdf');
+            await client.sendMessage(msg.from, '📄 Segue a nossa tabela de preços atualizada. Qualquer dúvida, estou à disposição!');
+            await client.sendMessage(msg.from, priceTable);
+            break;
+        case '3':
+            await client.sendMessage(msg.from, `💳 As formas de pagamento são:
 
 ✔️ À vista (PIX/BOLETO/TED) - *DESCONTO DE 5%* a ser aplicado no orçamento caso seja a forma escolhida;  
 ✔️ Parcelado no cartão de crédito *sem juros*;  
@@ -151,20 +148,11 @@ Assim que recebermos suas informações, poderemos continuar o atendimento. Obri
 ✔️ Faturado no CNPJ mediante análise de crédito, com *50% à vista* e *50% para 30/60 dias*.  
 
 Por favor, informe sua preferência!`);
-        await returnToMenu(chat);
-        return;
-    }
-
-    // Outras perguntas
-    if (msg.body === '4' && msg.from.endsWith('@c.us')) {
-        userHasSelectedOption = true;
-        const chat = await msg.getChat();
-
-        await delay(2000);
-        await chat.sendStateTyping();
-        await delay(2000);
-        await client.sendMessage(msg.from, 'Se você tiver outras dúvidas ou quiser mais informações, é só perguntar por aqui! 😊');
-        await returnToMenu(chat);
-        return;
+            break;
+        case '4':
+            await client.sendMessage(msg.from, 'Se você tiver outras dúvidas ou quiser mais informações, é só perguntar por aqui! 😊');
+            break;
+        default:
+            await client.sendMessage(msg.from, 'Desculpe, não entendi. Por favor, selecione uma opção válida do menu.');
     }
 });
