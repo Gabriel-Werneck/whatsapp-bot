@@ -1,5 +1,6 @@
 const express = require('express'); // Adicionando o Express
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
+const fetch = require('node-fetch'); // Para manter o serviço ativo com requisições
 
 const app = express();
 const PORT = process.env.PORT || 3000; // Porta usada pelo Render ou padrão 3000
@@ -31,23 +32,43 @@ client.on('ready', () => {
     console.log('Bot conectado com sucesso!');
 });
 
+// Lidar com falha de autenticação
 client.on('auth_failure', () => {
     console.error('Falha na autenticação.');
 });
 
+// Lidar com desconexão
 client.on('disconnected', (reason) => {
     console.log('Desconectado:', reason);
     console.log('Tentando reconectar...');
     client.initialize();
 });
 
+// Inicializa o bot
 client.initialize();
 
-const delay = ms => new Promise(res => setTimeout(res, ms)); // Função para criar delay entre ações
+// Função para enviar requisições periódicas para manter o serviço ativo
+setInterval(() => {
+    console.log("Mantendo o serviço ativo...");
+    fetch('https://whatsapp-bot-3vwc.onrender.com') // URL do seu bot no Render
+        .then(response => {
+            if (response.ok) {
+                console.log("Serviço ativo");
+            } else {
+                console.log("Erro ao manter o serviço ativo");
+            }
+        })
+        .catch(error => {
+            console.error("Erro na requisição para manter o serviço ativo:", error);
+        });
+}, 5 * 60 * 1000); // Intervalo de 5 minutos
+
+// Função para criar delay entre ações
+const delay = ms => new Promise(res => setTimeout(res, ms));
 
 // Funil principal do atendimento
 client.on('message', async msg => {
-    if (msg.body.match(/(menu|Menu|Bom|bom|dia|tarde|noite|oi|Oi|Olá|olá|ola|Ola|teste|Teste)/i) && msg.from.endsWith('@c.us')) {
+    if (msg.body.match(/(menu|Menu|dia|tarde|noite|oi|Oi|Olá|olá|ola|Ola|teste|Teste)/i) && msg.from.endsWith('@c.us')) {
         const chat = await msg.getChat();
 
         await delay(2000);
@@ -94,7 +115,7 @@ Assim que recebermos suas informações, poderemos continuar o atendimento. Obri
     // Enviar catálogo
     if (msg.body === '1' && msg.from.endsWith('@c.us')) {
         const chat = await msg.getChat();
-        const catalog = MessageMedia.fromFilePath('./Conamore_2025.pdf'); // Certifique-se de ter o arquivo "Conamore_2025.pdf" no diretório
+        const catalog = MessageMedia.fromFilePath('./Conamore_2025.pdf'); // Certifique-se de ter o arquivo "catalogo.pdf" no diretório
 
         await delay(2000);
         await chat.sendStateTyping();
@@ -108,7 +129,7 @@ Assim que recebermos suas informações, poderemos continuar o atendimento. Obri
     // Enviar tabela de preços
     if (msg.body === '2' && msg.from.endsWith('@c.us')) {
         const chat = await msg.getChat();
-        const priceTable = MessageMedia.fromFilePath('./Catalogo_Hotelaria_2025.pdf'); // Certifique-se de ter o arquivo "Catalogo_Hotelaria_2025.pdf" no diretório
+        const priceTable = MessageMedia.fromFilePath('./Catalogo_Hotelaria_2025.pdf'); // Certifique-se de ter o arquivo "tabela_precos.pdf" no diretório
 
         await delay(2000);
         await chat.sendStateTyping();
@@ -151,14 +172,14 @@ Por favor, informe sua preferência!`);
     }
 
     // Resposta ao menu de retorno
-    if (msg.body.match(/^(sim|s|si)$/i) && msg.from.endsWith('@c.us')) {
+    if (msg.body.match(/^(sim|Sim|s|S|si|Si)$/i) && msg.from.endsWith('@c.us')) {
         await client.sendMessage(msg.from, `Por favor, escolha uma das opções abaixo:
 
 1️⃣ - Conhecer nosso catálogo
 2️⃣ - Solicitar tabela de preços
 3️⃣ - Formas de pagamento
 4️⃣ - Outras perguntas`);
-    } else if (msg.body.match(/^(não|nao|na)$/i) && msg.from.endsWith('@c.us')) {
+    } else if (msg.body.match(/^(não|Não|nao|Nao|na|Na|N|n)$/i) && msg.from.endsWith('@c.us')) {
         await client.sendMessage(msg.from, 'Obrigada pelo contato! Foi um prazer atender você. Qualquer outra necessidade, estamos à disposição. Tenha um ótimo dia! 😊');
     }
 });
