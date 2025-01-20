@@ -90,7 +90,7 @@ Assim que recebermos suas informações, poderemos continuar o atendimento. Obri
     }
 
     // Verificar se o cliente já forneceu as informações solicitadas
-    const infoProvided = msg.body.match(/(nome completo|razão social|cpf|cnpj|e-mail|endereço|telefones)/i);
+    const infoProvided = msg.body.match(/(nome completo|razão social|cpf|cnpj|e-mail|endereço|telefone|@)/i);
 
     if (infoProvided) {
         await client.sendMessage(msg.from, `Obrigada pelas informações! Agora, selecione uma das opções abaixo para continuar:
@@ -115,7 +115,7 @@ Assim que recebermos suas informações, poderemos continuar o atendimento. Obri
     // Enviar catálogo
     if (msg.body === '1' && msg.from.endsWith('@c.us')) {
         const chat = await msg.getChat();
-        const catalog = MessageMedia.fromFilePath('./Conamore_2025.pdf'); // Certifique-se de ter o arquivo "catalogo.pdf" no diretório
+        const catalog = MessageMedia.fromFilePath('./Catalogo_Hotelaria_2025.pdf'); // Certifique-se de ter o arquivo "catalogo.pdf" no diretório
 
         await delay(2000);
         await chat.sendStateTyping();
@@ -129,12 +129,12 @@ Assim que recebermos suas informações, poderemos continuar o atendimento. Obri
     // Enviar tabela de preços
     if (msg.body === '2' && msg.from.endsWith('@c.us')) {
         const chat = await msg.getChat();
-        const priceTable = MessageMedia.fromFilePath('./Catalogo_Hotelaria_2025.pdf'); // Certifique-se de ter o arquivo "tabela_precos.pdf" no diretório
+        const priceTable = MessageMedia.fromFilePath('./Conamore_2025.pdf'); // Certifique-se de ter o arquivo "tabela_precos.pdf" no diretório
 
         await delay(2000);
         await chat.sendStateTyping();
         await delay(2000);
-        await client.sendMessage(msg.from, '📄 Segue a nossa tabela de preços atualizada. Qualquer dúvida, estou à disposição!');
+        await client.sendMessage(msg.from, '📄 Segue o nosso material institucional. Qualquer dúvida, estou à disposição!');
         await client.sendMessage(msg.from, priceTable);
         await returnToMenu(chat);
         return;
@@ -176,7 +176,7 @@ Por favor, informe sua preferência!`);
         await client.sendMessage(msg.from, `Por favor, escolha uma das opções abaixo:
 
 1️⃣ - Conhecer nosso catálogo
-2️⃣ - Solicitar tabela de preços
+2️⃣ - Saber mais sobre nós
 3️⃣ - Formas de pagamento
 4️⃣ - Outras perguntas`);
     } else if (msg.body.match(/^(não|Não|nao|Nao|na|Na|N|n)$/i) && msg.from.endsWith('@c.us')) {
